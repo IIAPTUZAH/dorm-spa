@@ -10,7 +10,7 @@
     <el-backtop target=".page-component__scroll .el-scrollbar__wrap"></el-backtop>  <!--Скрипт добавляющий кнопку На верх -->
     
     <div class="my-table">
-      <el-container>
+      <el-container style="height: 50px">
         <el-header>СПИСОК СТУДЕНТОВ ПРОЖИВАЮЩИХ В СТУДЕНЧЕСКОМ ОБЩЕЖИТИИ № 3 (ул. Абразивная, д. 48) на 01.10.2019 г.</el-header>
       </el-container>
       
@@ -78,12 +78,14 @@
             label="Действия"
             width="270">
             <template slot-scope="scope">
-              <el-button @click="handleEdit(scope.$index, scope.row)" icon="el-icon-edit" size="mini" v-if="scope.row.edited">Редактировать</el-button>
-              <el-button @click="handleSave(scope.$index, scope.row)" type="text" icon="el-icon-check" size="medium" v-else-if="!scope.row.edited">Сохранить</el-button>
-              <el-row>
+              <el-button-group>
+                <el-button @click="handleEdit(scope.$index, scope.row)" icon="el-icon-edit" size="mini" v-if="scope.row.edited">Редактировать</el-button>
+                <el-button @click="handleSave(scope.$index, scope.row)" type="text" icon="el-icon-check" size="medium" v-else-if="!scope.row.edited">Сохранить</el-button>
+             
                 <el-button @click="addStudent(scope.$index, scope.row)" icon="el-icon-plus" size="mini" >Добавить</el-button>             
                 <el-button @click="deleteStudent(scope.$index, scope.row)" type="danger" icon="el-icon-delete" size="mini" circle></el-button>
-              </el-row>
+              
+              </el-button-group>
             </template>
           </el-table-column>  
       </el-table>
@@ -132,7 +134,7 @@
     },
     methods: {
       getAllitems() {
-        axios.get(this.endpoint + '?perPage=10&page=0')   //По умолчанию выводим 10 студентов.
+        axios.get(this.endpoint + '?perPage=10&page=0')   // По умолчанию выводим 10 студентов.
           .then(response => {
             this.items = response.data;
           })
@@ -141,7 +143,7 @@
             console.log(error);
           })
       },
-      handleSizeChange(val) {       //Определяем количество отображаемых элементов
+      handleSizeChange(val) {       // Определяем количество отображаемых элементов
         this.perPage = val,
         axios.get(this.endpoint + '?perPage=' + this.perPage + '&page=' + (this.currentPage * this.perPage - this.perPage))
           .then(response => {
@@ -150,11 +152,10 @@
           .catch(error => {
             console.log('-----error-------');
             console.log(error);
-          }),        
-        console.log(this.perPage),
+          }),
         console.log(`${val} items per page`);
       },
-      handleCurrentChange(val) {      //Переходим на выбранную страницу
+      handleCurrentChange(val) {      // Переходим на выбранную страницу
         this.currentPage = val,
         axios.get(this.endpoint + '?perPage=' + this.perPage + '&page=' + (this.currentPage * this.perPage - this.perPage))
           .then(response => {
@@ -164,19 +165,17 @@
             console.log('-----error-------');
             console.log(error);
           }),
-        console.log(this.currentPage),
         console.log(`current page: ${val}`);
       },
       handleSave(index, row) {
-        axios.post(this.endpoint, {
+        axios.put('http://127.0.0.1:5000/user/' + this.items[index].studentID, {
           fio: row.fio,
           university: row.university,
           birthdate: row.birthdate,
           room: row.room,
           group: row.group,
           education: row.education,
-          male: row.male,
-          studentID: this.items[index].studentID
+          male: row.male
         })
         .then(function (response) {
                     console.log(response);
@@ -234,9 +233,25 @@
       },
       addStudent(index, row){
         this.items.splice(index, 0, {});
+        axios.post(this.endpoint, {
+          fio: row.fio,
+          university: row.university,
+          birthdate: row.birthdate,
+          room: row.room,
+          group: row.group,
+          education: row.education,
+          male: row.male,
+          studentID: this.items[index].studentID    // Надо добавить скрытые поля для новых
+        })
+        .then(function (response) {
+                    console.log(response);
+                })
+        .catch(function (error) {
+                    console.log(error);
+                });
       },
       indexMethod(index) {
-        return index + (this.currentPage * this.perPage - this.perPage) + 1;  //Считаем номер студента
+        return index + (this.currentPage * this.perPage - this.perPage) + 1;  // Считаем номер студента
       }
     }
   }
