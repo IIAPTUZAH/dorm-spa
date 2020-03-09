@@ -1,18 +1,58 @@
 <template>
-    <!-- <div>
-      <div class="add-row">
-        <el-row>
-          <el-button @click="addStudent(scope.$index, scope.row)" icon="el-icon-plus" size="mini" >Добавить студента</el-button>
-        </el-row>
-      </div> -->
-  <div class='page-component__scroll'>
-  <div class='el-scrollbar__wrap'>
-    <el-backtop target=".page-component__scroll .el-scrollbar__wrap"></el-backtop>  <!--Скрипт добавляющий кнопку На верх -->
     
     <div class="my-table">
-      <el-container style="height: 50px">
+      <el-container style="height: 90px">
         <el-header>СПИСОК СТУДЕНТОВ ПРОЖИВАЮЩИХ В СТУДЕНЧЕСКОМ ОБЩЕЖИТИИ № 3 (ул. Абразивная, д. 48) на 01.10.2019 г.</el-header>
+        <el-button type="text" @click="dialog = true">Добавить студента</el-button>
+        <el-drawer
+          title="Добавить нового бедолагу"
+          :before-close="handleClose"
+          :visible.sync="dialog"
+          direction="rtl"
+          custom-class="add-student"
+          ref="drawer"
+          >
+          <div class="add-student__content">
+            <el-form :model="form">
+              <el-form-item label="Учебное заведение" :label-width="formLabelWidth">
+                <el-input style="width: 300px; height: 20px;" v-model="form.university" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="Дата Рождения" :label-width="formLabelWidth">
+                <el-input style="width: 300px; height: 20px;" v-model="form.birthdate" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="Комната" :label-width="formLabelWidth">
+                <el-input style="width: 300px; height: 20px;" v-model="form.room" autocomplete="off"></el-input>
+              </el-form-item>    
+              <el-form-item label="Группа" :label-width="formLabelWidth">
+                <el-input style="width: 300px; height: 20px;" v-model="form.group" autocomplete="off"></el-input>
+              </el-form-item> 
+              <el-form-item label="Форма Обучения" :label-width="formLabelWidth">
+                <el-input style="width: 300px; height: 20px;" v-model="form.education" autocomplete="off"></el-input>
+              </el-form-item> 
+              <el-form-item label="Пол" :label-width="formLabelWidth">
+                <el-input style="width: 300px; height: 20px;" v-model="form.male" autocomplete="off"></el-input>
+              </el-form-item> 
+              <el-form-item label="Инвалидность" :label-width="formLabelWidth">
+                <el-input style="width: 300px; height: 20px;" v-model="form.disability" autocomplete="off"></el-input>
+              </el-form-item> 
+              <el-form-item label="Приемный" :label-width="formLabelWidth">
+                <el-input style="width: 300px; height: 20px;" v-model="form.adopted" autocomplete="off"></el-input>
+              </el-form-item> 
+              <el-form-item label="Национальность" :label-width="formLabelWidth">
+                <el-input style="width: 300px; height: 20px;" v-model="form.russian" autocomplete="off"></el-input>
+              </el-form-item>                                                                                                             
+            </el-form>
+            <div class="add-student__footer">
+              <el-button @click="cancelForm">Отменить</el-button>
+              <el-button type="primary" @click="$refs.drawer.closeDrawer()" :loading="loading">{{ loading ? 'Сохранение ...' : 'Подтвердить' }}</el-button>
+            </div>
+          </div>
+        </el-drawer>        
       </el-container>
+
+    <div class='page-component__scroll'>
+    <div class='el-scrollbar__wrap'>
+      <el-backtop target=".page-component__scroll .el-scrollbar__wrap"></el-backtop>  <!--Скрипт добавляющий кнопку На верх -->
       
       <el-table
         :data="items"
@@ -82,7 +122,7 @@
                 <el-button @click="handleEdit(scope.$index, scope.row)" icon="el-icon-edit" size="mini" v-if="scope.row.edited">Редактировать</el-button>
                 <el-button @click="handleSave(scope.$index, scope.row)" type="text" icon="el-icon-check" size="medium" v-else-if="!scope.row.edited">Сохранить</el-button>
              
-                <el-button @click="addStudent(scope.$index, scope.row)" icon="el-icon-plus" size="mini" >Добавить</el-button>             
+                <!-- <el-button @click="addStudent(scope.$index, scope.row)" icon="el-icon-plus" size="mini" >Добавить</el-button>              -->
                 <el-button @click="deleteStudent(scope.$index, scope.row)" type="danger" icon="el-icon-delete" size="mini" circle></el-button>
               
               </el-button-group>
@@ -116,17 +156,23 @@
         items: [],
         endpoint: 'http://127.0.0.1:5000/users',
         form: {
-          fio: '',
           university: '',
           birthdate: '',
           room: '',
           group: '',
           education: '',
-          male: ''
+          male: '',
+          disability: '',
+          adopted: '',
+          russian: ''
         },
+        formLabelWidth: '140px',
+        timer: null,
         perPage: 10,
         currentPage: 1,
-        total: [],
+        
+        dialog: false,
+        loading: false,
       }
     },
     created() {
@@ -231,28 +277,57 @@
             })
           });
       },
-      addStudent(index, row){
-        this.items.splice(index, 0, {});
-        axios.post(this.endpoint, {
-          fio: row.fio,
-          university: row.university,
-          birthdate: row.birthdate,
-          room: row.room,
-          group: row.group,
-          education: row.education,
-          male: row.male,
-          studentID: this.items[index].studentID    // Надо добавить скрытые поля для новых
-        })
-        .then(function (response) {
-                    console.log(response);
-                })
-        .catch(function (error) {
-                    console.log(error);
-                });
-      },
+      // addStudent(index, row){
+      //   this.items.splice(index, 0, {});
+      //   axios.post(this.endpoint, {
+      //     fio: row.fio,
+      //     university: row.university,
+      //     birthdate: row.birthdate,
+      //     room: row.room,
+      //     group: row.group,
+      //     education: row.education,
+      //     male: row.male,
+      //     studentID: this.items[index].studentID    // Надо добавить скрытые поля для новых
+      //   })
+      //   .then(function (response) {
+      //               console.log(response);
+      //           })
+      //   .catch(function (error) {
+      //               console.log(error);
+      //           });
+      // },
       indexMethod(index) {
         return index + (this.currentPage * this.perPage - this.perPage) + 1;  // Считаем номер студента
-      }
+      },
+      handleClose(done) {
+            if (this.loading) {
+              return;
+            }
+            this.$confirm('Уверена?')
+              .then(_ => {
+                this.loading = true;
+                this.timer = setTimeout(() => {
+                  done();
+                  // animation takes time
+                  setTimeout(() => {
+                    this.loading = false;
+                  }, 400);
+                }, 1000);
+                axios.post(this.endpoint,  this.form)
+                        .then(function (response) {
+                                    console.log(response);
+                                })
+                        .catch(function (error) {
+                                    console.log(error);
+                                });                
+              })
+              .catch(_ => {});
+          },
+          cancelForm() {
+            this.loading = false;
+            this.dialog = false;
+            clearTimeout(this.timer);
+          } 
     }
   }
 </script>
@@ -260,7 +335,7 @@
 <style lang="scss">
 @import url("//unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css");
 
-  .el-header, .el-footer {
+  .el-header {
     background-color: #E9EEF3;
     color: #333;
     text-align: center;
@@ -268,8 +343,8 @@
   }
 
   .page-component__scroll {
-      height: 900px;
-      margin-top: 40px;
+      height: 800px;
+      margin-top: 10px
   }
   
   .page-component__scroll>.el-scrollbar__wrap {
