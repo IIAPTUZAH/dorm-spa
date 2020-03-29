@@ -30,16 +30,28 @@
                 <el-input style="width: 300px; height: 20px;" v-model="form.education" autocomplete="off"></el-input>
               </el-form-item> 
               <el-form-item label="Пол" :label-width="formLabelWidth">
-                <el-input style="width: 300px; height: 20px;" v-model="form.male" autocomplete="off"></el-input>
+                <el-select style="width: 300px; height: 20px;" v-model="form.male" placeholder="Пол">
+                  <el-option label="Муж" value="1"></el-option>
+                  <el-option label="Жен" value="0"></el-option>
+                </el-select>
               </el-form-item> 
               <el-form-item label="Инвалидность" :label-width="formLabelWidth">
-                <el-input style="width: 300px; height: 20px;" v-model="form.disability" autocomplete="off"></el-input>
+                <el-select style="width: 300px; height: 20px;" v-model="form.disability" placeholder="Есть инвалидность?">>
+                  <el-option label="Да" value="1"></el-option>
+                  <el-option label="Нет" value="0"></el-option>
+                </el-select>
               </el-form-item> 
               <el-form-item label="Приемный" :label-width="formLabelWidth">
-                <el-input style="width: 300px; height: 20px;" v-model="form.adopted" autocomplete="off"></el-input>
+                <el-select style="width: 300px; height: 20px;" v-model="form.adopted" placeholder="Приемный?">
+                  <el-option label="Да" value="1"></el-option>
+                  <el-option label="Нет" value="0"></el-option>
+                </el-select>                  
               </el-form-item> 
               <el-form-item label="Национальность" :label-width="formLabelWidth">
-                <el-input style="width: 300px; height: 20px;" v-model="form.russian" autocomplete="off"></el-input>
+                <el-select style="width: 300px; height: 20px;" v-model="form.russian" placeholder="Русский?">
+                   <el-option label="Да" value="1"></el-option>
+                  <el-option label="Нет" value="0"></el-option>
+                </el-select>                    
               </el-form-item>                                                                                                             
             </el-form>
             <div class="add-student__footer">
