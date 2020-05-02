@@ -1,9 +1,15 @@
 <template>
-    
+
     <div class="my-table">
-      <el-container style="height: 90px">
-        <el-header>СПИСОК СТУДЕНТОВ ПРОЖИВАЮЩИХ В СТУДЕНЧЕСКОМ ОБЩЕЖИТИИ № 3 (ул. Абразивная, д. 48) на 01.10.2019 г.</el-header>
-        <el-button type="text" @click="dialog = true">Добавить студента</el-button>
+      <el-container style="height:20%">
+        <el-header>СПИСОК СТУДЕНТОВ, ПРОЖИВАЮЩИХ В СТУДЕНЧЕСКОМ ОБЩЕЖИТИИ № 3 (ул. Абразивная, д. 48) на 01.10.2019 г.</el-header>
+        <el-button-group>
+          <el-input style="margin: 10px 80%; width: 300px; height: 20px;" v-model="search" size="mini" placeholder="Введи жертву">
+            <i slot="prefix" class="el-input__icon el-icon-search"></i>
+          </el-input>
+          <el-button style="margin: -40px 40%; width: 300px; height: 20px;" type="text" @click="dialog = true">Добавить студента</el-button>
+          <el-button style="margin: -40px 5%; width: 300px; height: 20px;" type="text" @click="dialogFormVisible = true">Отправить отчеты</el-button>
+        </el-button-group>
         <el-drawer
           title="Добавить нового бедолагу"
           :before-close="handleClose"
@@ -16,6 +22,9 @@
             <el-form :model="form">
               <el-form-item label="Учебное заведение" :label-width="formLabelWidth">
                 <el-input style="width: 300px; height: 20px;" v-model="form.university" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="ФИО" :label-width="formLabelWidth">
+                <el-input style="width: 300px; height: 20px;" v-model="form.fio" autocomplete="off"></el-input>
               </el-form-item>
               <el-form-item label="Дата Рождения" :label-width="formLabelWidth">
                 <el-input style="width: 300px; height: 20px;" v-model="form.birthdate" autocomplete="off"></el-input>
@@ -36,7 +45,7 @@
                 </el-select>
               </el-form-item> 
               <el-form-item label="Инвалидность" :label-width="formLabelWidth">
-                <el-select style="width: 300px; height: 20px;" v-model="form.disability" placeholder="Есть инвалидность?">>
+                <el-select style="width: 300px; height: 20px;" v-model="form.disability" placeholder="Есть инвалидность?">
                   <el-option label="Да" value="1"></el-option>
                   <el-option label="Нет" value="0"></el-option>
                 </el-select>
@@ -55,11 +64,34 @@
               </el-form-item>                                                                                                             
             </el-form>
             <div class="add-student__footer">
-              <el-button @click="cancelForm">Отменить</el-button>
+              <el-button style="margin: 0px 5%;" @click="cancelForm">Отменить</el-button>
               <el-button type="primary" @click="$refs.drawer.closeDrawer()" :loading="loading">{{ loading ? 'Сохранение ...' : 'Подтвердить' }}</el-button>
             </div>
           </div>
-        </el-drawer>        
+        </el-drawer>
+        <el-dialog
+          title="Отправка отчетов"
+          :visible.sync="dialogFormVisible"
+          width="30%">
+            <el-form :model="formReport"> <!-- Тут мог сломать что нибудь -->
+              <el-form-item label="Введи преподавателей посещавших общагу:">
+                <el-input v-model="formReport.name" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="Кому отправить отчет" required>
+                <el-select v-model="formReport.recipient" placeholder="Выбери кому">
+                  <el-option label="Бухгалтерии" value="buh"></el-option>
+                  <el-option label="Начальнице" value="boss"></el-option>
+                </el-select>
+              </el-form-item>
+                <el-form-item label="Дата отчета" prop="dateReport" required>
+                  <el-date-picker type="month" placeholder="Выбери месяц отчета" v-model="formReport.dateReport" format="yyyy/MM" value-format="MM.yyyy" style="width: 100%;" required></el-date-picker>
+                </el-form-item>              
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+              <el-button @click="dialogFormVisible = false">Отменить</el-button>
+              <el-button type="primary" @click="sendReport()">Отправить</el-button>
+            </span>
+        </el-dialog>                 
       </el-container>
 
     <div class='page-component__scroll'>
@@ -67,7 +99,8 @@
       <el-backtop target=".page-component__scroll .el-scrollbar__wrap"></el-backtop>  <!--Скрипт добавляющий кнопку На верх -->
       
       <el-table
-        :data="items"
+        
+        :data="items.filter(data => !search || data.fio.toLowerCase().includes(search.toLowerCase()))"
         :default-sort = "{prop: 'room', order: 'ascenting'}"
         border
         lazy
@@ -75,12 +108,12 @@
           <el-table-column
             type="index"
             :index="indexMethod"
-            width="50">
+            width=50>
           </el-table-column>
           <el-table-column
             prop="fio"
             label="ФИО"
-            width="370">
+            width=370%>
               <template slot-scope="scope">
                 <input style="width: 300px; height: 20px;" v-model.lazy="scope.row.fio" :readonly="scope.row.edited">
               </template>
@@ -140,6 +173,15 @@
               </el-button-group>
             </template>
           </el-table-column>  
+<!--           <el-table-column
+            align="right">
+            <template slot="header" slot-scope="scope">
+              <el-input
+                v-model="search"
+                size="mini"
+                placeholder="Type to search"/>
+            </template>
+          </el-table-column>   -->         
       </el-table>
 
       <div class="block"> <!-- Блок с пагинацией -->
@@ -166,7 +208,7 @@
     data () {
       return {
         items: [],
-        endpoint: 'http://127.0.0.1:5000/users',
+        endpoint: 'http://127.0.0.1:5000/students',
         form: {
           university: '',
           birthdate: '',
@@ -178,13 +220,19 @@
           adopted: '',
           russian: ''
         },
+        formReport:{
+          name: '',
+          recipient: '',
+          dateReport: ''       
+        },
         formLabelWidth: '140px',
         timer: null,
         perPage: 10,
         currentPage: 1,
-        
+        search: '',
         dialog: false,
         loading: false,
+        dialogFormVisible: false,
       }
     },
     created() {
@@ -226,7 +274,7 @@
         console.log(`current page: ${val}`);
       },
       handleSave(index, row) {
-        axios.put('http://127.0.0.1:5000/user/' + this.items[index].studentID, {
+        axios.put('http://127.0.0.1:5000/student/' + this.items[index].studentID, {
           fio: row.fio,
           university: row.university,
           birthdate: row.birthdate,
@@ -247,7 +295,7 @@
         this.items[index].edited = false;
       },
       deleteRow(index, row) {
-        axios.delete('http://127.0.0.1:5000/user/' + this.items[index].studentID)   // Удаляем по индексу из БД
+        axios.delete('http://127.0.0.1:5000/student/' + this.items[index].studentID)   // Удаляем по индексу из БД
         .then(response => {
                   console.log(response);
                }),
@@ -339,8 +387,18 @@
             this.loading = false;
             this.dialog = false;
             clearTimeout(this.timer);
-          } 
-    }
+          },
+          sendReport() {
+            axios.post('http://127.0.0.1:5000/reports', this.formReport)
+            .then(function (response) {
+                        console.log(response);
+                    })
+            .catch(function (error) {
+                        console.log(error);
+                    });
+            this.dialogFormVisible = false;        
+          },
+      }
   }
 </script>
 
