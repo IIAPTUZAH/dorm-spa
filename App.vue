@@ -426,21 +426,3 @@
       height: 100%;
   }
 </style>
-
-
-
-<div class="addRowBtn" v-on:click.prevent="addRow" value=""><i class="fa fa-plus" aria-hidden="true"></i></div>
-</div>
-methods: {
-            addRow: function (event) {
-              lastId =  this.labels.length;
-              var newRow={
-                id: this.nextBarId++, 
-                percentual: this.value, 
-                label: this.label , 
-                icon: this.icon
-              };
-              this.labels.push( newRow );
-            }
-
-readonly(?)
