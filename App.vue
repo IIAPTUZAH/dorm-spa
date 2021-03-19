@@ -208,7 +208,7 @@
     data () {
       return {
         items: [],
-        endpoint: 'http://127.0.0.1:5000/students',
+        endpoint: 'http://192.168.1.144:5000/students',
         form: {
           university: '',
           birthdate: '',
@@ -274,7 +274,7 @@
         console.log(`current page: ${val}`);
       },
       handleSave(index, row) {
-        axios.put('http://127.0.0.1:5000/student/' + this.items[index].studentID, {
+        axios.put('http://192.168.1.144:5000/student/' + this.items[index].studentID, {
           fio: row.fio,
           university: row.university,
           birthdate: row.birthdate,
@@ -295,7 +295,7 @@
         this.items[index].edited = false;
       },
       deleteRow(index, row) {
-        axios.delete('http://127.0.0.1:5000/student/' + this.items[index].studentID)   // Удаляем по индексу из БД
+        axios.delete('http://192.168.1.144:5000/student/' + this.items[index].studentID)   // Удаляем по индексу из БД
         .then(response => {
                   console.log(response);
                }),
@@ -389,7 +389,7 @@
             clearTimeout(this.timer);
           },
           sendReport() {
-            axios.post('http://127.0.0.1:5000/reports', this.formReport)
+            axios.post('http://192.168.1.144:5000/reports', this.formReport)
             .then(function (response) {
                         console.log(response);
                     })
